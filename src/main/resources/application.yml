@@ -1,0 +1,40 @@
+application:
+  kafka:
+    topic: "demo-topic"
+
+spring:
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      client-id: "demo-producer"
+      properties:
+        acks: 1
+        spring:
+        json:
+        add:
+        type:
+        headers: false
+    consumer:
+      group-id: "consumer-group3"
+#      bootstrap-servers: "localhost:9092"
+#      client-id: "demo-consumer"
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
+            value:
+              default:
+                type: java.lang.String
+        #            type:
+#              mapping: java.lang.String
+        max:
+          poll:
+            records: 3
+            interval:
+              ms: 3_000
