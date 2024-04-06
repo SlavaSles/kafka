@@ -17,7 +17,7 @@ spring:
         type:
         headers: false
     consumer:
-      group-id: "consumer-group3"
+      group-id: "consumer-group1"
 #      bootstrap-servers: "localhost:9092"
 #      client-id: "demo-consumer"
       auto-offset-reset: earliest
@@ -37,4 +37,4 @@ spring:
           poll:
             records: 3
             interval:
-              ms: 3_000
+              ms: 10_000

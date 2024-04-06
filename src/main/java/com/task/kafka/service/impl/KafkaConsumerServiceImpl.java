@@ -1,12 +1,18 @@
-package com.task.kafka.service;
+package com.task.kafka.service.impl;
 
+import com.task.kafka.service.KafkaConsumerService;
+import com.task.kafka.service.RestService;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 @Service
-public class KafkaConsumerServiceImpl {
+@RequiredArgsConstructor
+public class KafkaConsumerServiceImpl implements KafkaConsumerService {
+
+    private final RestService restService;
 
     private final String topic = "${application.kafka.topic}";
 
@@ -16,6 +22,6 @@ public class KafkaConsumerServiceImpl {
     public void listen(@Payload List<String> values) {
         System.out.println("Consume values, values.size: " + values.size());
         values.forEach(System.out::println);
-//        return values;
+        restService.receiveMessage(values);
     }
 }
