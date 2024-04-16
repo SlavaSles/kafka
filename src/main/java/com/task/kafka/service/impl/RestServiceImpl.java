@@ -1,5 +1,9 @@
 package com.task.kafka.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.task.kafka.dto.RequestDto;
+import com.task.kafka.dto.ResponseDto;
 import com.task.kafka.service.KafkaProducerService;
 import com.task.kafka.service.RestService;
 import java.util.Map;
@@ -9,38 +13,45 @@ import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RestServiceImpl implements RestService {
 
-    Map<String, Exchanger<String>> exchangerMap = new ConcurrentHashMap<>();
+    private final Map<String, Exchanger<Object>> exchangerMap = new ConcurrentHashMap<>();
+
+    private final ObjectMapper objectMapper;
 
     private final KafkaProducerService kafkaProducerService;
 
-    public String sendMessage(String message) {
-        Exchanger<String> exchanger = new Exchanger<>();
+    public ResponseDto sendMessage(RequestDto requestDto) {
+        Exchanger<Object> exchanger = new Exchanger<>();
         String exchangerUuid = UUID.randomUUID().toString();
         exchangerMap.put(exchangerUuid, exchanger);
-        kafkaProducerService.send(exchangerUuid, message);
-        String answer;
+        Object answer;
         try {
-            answer = exchanger.exchange("", 5_000, TimeUnit.MILLISECONDS);
+            kafkaProducerService.send(exchangerUuid, objectMapper.writeValueAsString(requestDto));
+            answer = exchanger.exchange(null, 5_000, TimeUnit.MILLISECONDS);
             exchangerMap.remove(exchangerUuid);
-        } catch (InterruptedException | TimeoutException e) {
+        } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        return answer;
+        log.info("RestService successfully convert message to ResponseDto = {}", ((ResponseDto) answer).message());
+        return (ResponseDto) answer;
     }
 
     public void receiveMessage(String exchangerUuid, String message) {
         if (exchangerMap.containsKey(exchangerUuid)) {
-            System.out.println("RestService successfully receive message: " + message);
+            log.info("RestService receive message = {}", message);
             try {
-                Exchanger<String> exchanger = exchangerMap.get(exchangerUuid);
-                exchanger.exchange(message, 5_000, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | TimeoutException e) {
+                RequestDto requestDto = objectMapper.readValue(message, RequestDto.class);
+                ResponseDto responseDto = new ResponseDto(requestDto.getMessage());
+                Exchanger<Object> exchanger = exchangerMap.get(exchangerUuid);
+                exchanger.exchange(responseDto, 5_000, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }

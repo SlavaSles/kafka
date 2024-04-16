@@ -1,8 +1,19 @@
 package com.task.kafka.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Класс, описывающий формат сообщений в запросах.
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RequestDto {
-    String message;
+
+    /**
+     * Сообщение запроса.
+     */
+    private String message;
 }

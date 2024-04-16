@@ -15,7 +15,7 @@ spring:
 #        json:
 #        add:
 #        type:
-        headers: true
+#        headers: true
     consumer:
       group-id: "consumer-group1"
 #      bootstrap-servers: "localhost:9092"
