@@ -2,6 +2,8 @@ package com.task.kafka.service.impl;
 
 import com.task.kafka.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -16,9 +18,11 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
-    public void send(String message) {
+    public void send(String exchangerUuid, String message) {
+        ProducerRecord<String, String> record = new ProducerRecord<>(topicName, message);
+        record.headers().add(new RecordHeader("exchangerId", exchangerUuid.getBytes()));
         try {
-            kafkaTemplate.send(topicName, message).whenComplete(
+            kafkaTemplate.send(record).whenComplete(
                 (result, ex) -> {
                     if (ex == null) {
                         System.out.println("message: " + message + " was sent, offset: " +

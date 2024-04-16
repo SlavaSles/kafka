@@ -11,11 +11,11 @@ spring:
 #      client-id: "demo-producer"
       properties:
         acks: 1
-        spring:
-        json:
-        add:
-        type:
-        headers: false
+#        spring:
+#        json:
+#        add:
+#        type:
+        headers: true
     consumer:
       group-id: "consumer-group1"
 #      bootstrap-servers: "localhost:9092"

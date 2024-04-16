@@ -1,9 +1,8 @@
 package com.task.kafka.service;
 
-import java.util.List;
-import org.springframework.messaging.handler.annotation.Payload;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public interface KafkaConsumerService {
 
-    void listen(@Payload List<String> values);
+    void listen(ConsumerRecord<String, String> record);
 }
