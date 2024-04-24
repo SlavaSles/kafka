@@ -11,5 +11,5 @@ public interface KafkaProducerService {
      * @param exchangerUuid идентификатор {@link java.util.concurrent.Exchanger} для конкретного запроса.
      * @param message сериализованное сообщение для Кафки.
      */
-    void send(String exchangerUuid, String message);
+    void sendMessage(String exchangerUuid, String message, String headerName);
 }

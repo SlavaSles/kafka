@@ -14,15 +14,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class KafkaProducerServiceImpl implements KafkaProducerService {
 
-    @Value("${application.kafka.topic}")
-    private String topic;
+    @Value("${application.kafka.producer.topic:demo-topic}")
+    private final String producerTopic;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
-    public void send(String exchangerUuid, String message) {
-        ProducerRecord<String, String> record = new ProducerRecord<>(topic, message);
-        record.headers().add(new RecordHeader("exchangerId", exchangerUuid.getBytes()));
+    public void sendMessage(String exchangerUuid, String message, String HEADER_NAME) {
+        ProducerRecord<String, String> record = new ProducerRecord<>(producerTopic, message);
+        record.headers().add(new RecordHeader(HEADER_NAME, exchangerUuid.getBytes()));
         try {
             kafkaTemplate.send(record).whenComplete(
                 (result, ex) -> {

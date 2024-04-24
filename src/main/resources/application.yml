@@ -1,6 +1,9 @@
 application:
   kafka:
-    topic: "demo-topic"
+    producer:
+      topic: "demo-topic"
+    consumer:
+      topic: "demo-topic"
 
 spring:
   kafka:
@@ -8,7 +11,7 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-#      client-id: "demo-producer"
+      client-id: "demo-producer"
       properties:
         acks: 1
 #        spring:
@@ -19,7 +22,7 @@ spring:
     consumer:
       group-id: "consumer-group1"
 #      bootstrap-servers: "localhost:9092"
-#      client-id: "demo-consumer"
+      client-id: "demo-consumer"
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer

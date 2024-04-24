@@ -16,11 +16,4 @@ public class KafkaAppExceptionHandler {
         return new ErrorDto(HttpStatus.GATEWAY_TIMEOUT.value(),
             HttpStatus.GATEWAY_TIMEOUT.getReasonPhrase());
     }
-
-//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//    @ExceptionHandler(Exception.class)
-//    public ErrorDto handleOtherException(Exception exception) {
-//        return new ErrorDto(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-//            HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
-//    }
 }

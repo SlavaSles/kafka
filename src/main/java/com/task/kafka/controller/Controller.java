@@ -2,7 +2,7 @@ package com.task.kafka.controller;
 
 import com.task.kafka.dto.RequestDto;
 import com.task.kafka.dto.ResponseDto;
-import com.task.kafka.service.RestService;
+import com.task.kafka.service.KafkaSyncTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ public class Controller {
 
     private Integer messageNumber = 0;
 
-    private final RestService restService;
+    private final KafkaSyncTemplate kafkaSyncTemplate;
 
     /**
      * Метод публикует сообщение в топике Кафки, считывает его обратно и возвращает пользователю.
@@ -38,7 +38,7 @@ public class Controller {
         log.info("Post message for publishing to Kafka with text = {}", requestDto.getMessage());
         String message = requestDto.getMessage().concat(" ").concat(messageNumber.toString());
         requestDto.setMessage(message);
-        ResponseDto responseDto = restService.sendMessage(requestDto);
+        ResponseDto responseDto = kafkaSyncTemplate.kafkaExchange(requestDto);
         return ResponseEntity.ok(responseDto);
     }
 }
