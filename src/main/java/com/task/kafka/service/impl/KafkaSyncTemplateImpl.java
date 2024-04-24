@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -31,11 +32,14 @@ public class KafkaSyncTemplateImpl implements KafkaSyncTemplate {
 
     private final KafkaProducerService kafkaProducerService;
 
-    private final String consumerTopic = "${application.kafka.consumer.topic:demo-topic}";
+    private final String HEADER_NAME = "exchangerId";
+
+    private final String consumerTopic = "${application.kafka.topics.consumer.topic:demo-topic}";
 
     private final String kafkaConsumerGroupId = "${spring.kafka.consumer.group-id:consumer-group1}";
 
-    private final String HEADER_NAME = "exchangerId";
+    @Value("${application.kafka.exchange.timeout:5000}")
+    private final Long EXCHANGE_TIMEOUT;
 
     public ResponseDto kafkaExchange(RequestDto requestDto) {
         Exchanger<Object> exchanger = new Exchanger<>();
@@ -45,7 +49,7 @@ public class KafkaSyncTemplateImpl implements KafkaSyncTemplate {
         try {
             kafkaProducerService.sendMessage(exchangerUuid, objectMapper.writeValueAsString(requestDto),
                 HEADER_NAME);
-            answer = exchanger.exchange(null, 5_000, TimeUnit.MILLISECONDS);
+            answer = exchanger.exchange(null, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
             exchangerMap.remove(exchangerUuid);
         } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -78,7 +82,7 @@ public class KafkaSyncTemplateImpl implements KafkaSyncTemplate {
                 RequestDto requestDto = objectMapper.readValue(message, RequestDto.class);
                 ResponseDto responseDto = new ResponseDto(requestDto.getMessage());
                 Exchanger<Object> exchanger = exchangerMap.get(exchangerUuid);
-                exchanger.exchange(responseDto, 5_000, TimeUnit.MILLISECONDS);
+                exchanger.exchange(responseDto, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }

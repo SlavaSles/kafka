@@ -1,10 +1,16 @@
 application:
   kafka:
-    producer:
-      topic: "demo-topic"
-    consumer:
-      topic: "demo-topic"
-
+    topics:
+      producer:
+        topic: "demo-topic"
+        partitions: 1
+        replicas: 1
+      consumer:
+        topic: "demo-topic"
+        partitions: 1
+        replicas: 1
+    exchange:
+      timeout: 5000
 spring:
   kafka:
     bootstrap-servers: "localhost:9092"
@@ -14,14 +20,8 @@ spring:
       client-id: "demo-producer"
       properties:
         acks: 1
-#        spring:
-#        json:
-#        add:
-#        type:
-#        headers: true
     consumer:
       group-id: "consumer-group1"
-#      bootstrap-servers: "localhost:9092"
       client-id: "demo-consumer"
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -34,8 +34,6 @@ spring:
             value:
               default:
                 type: java.lang.String
-        #            type:
-#              mapping: java.lang.String
         max:
           poll:
             records: 3
