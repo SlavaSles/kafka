@@ -48,10 +48,9 @@ public class KafkaSyncTemplateImpl<T, S> implements KafkaSyncTemplate<T, S> {
         exchangerMap.put(exchangerUuid, exchanger);
         S answer;
         try {
-            kafkaProducerService.sendMessage(exchangerUuid, objectMapper.writeValueAsString(t),
-                HEADER_NAME);
+            kafkaProducerService.sendMessage(exchangerUuid, t, HEADER_NAME);
             answer = exchanger.exchange(s, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
+        } catch (InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         } finally {
             exchangerMap.remove(exchangerUuid);

@@ -18,11 +18,11 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
     @Qualifier("producer")
     private final NewTopic producerTopic;
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    public void sendMessage(String exchangerUuid, String message, String HEADER_NAME) {
-        ProducerRecord<String, String> record = new ProducerRecord<>(
+    public void sendMessage(String exchangerUuid, Object message, String HEADER_NAME) {
+        ProducerRecord<String, Object> record = new ProducerRecord<>(
             producerTopic.name(),
             message);
         record.headers().add(new RecordHeader(HEADER_NAME, exchangerUuid.getBytes()));
