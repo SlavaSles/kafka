@@ -20,13 +20,13 @@ public class Controller {
 
     private Integer messageNumber = 0;
 
-    private final KafkaSyncTemplate kafkaSyncTemplate;
+    private final KafkaSyncTemplate<RequestDto, ResponseDto> kafkaSyncTemplate;
 
     /**
      * Метод публикует сообщение в топике Кафки, считывает его обратно и возвращает пользователю.
      *
-     * @param requestDto тело запрос с полем message в {@link RequestDto}.
-     * @return возвращает прочитанное из Кафки сообщение.
+     * @param requestDto тело запроса с полем message в {@link RequestDto}.
+     * @return возвращает прочитанное из Кафки сообщение {@link ResponseDto}.
      */
     @PostMapping("/kafka")
     public ResponseEntity<?> publishMessage(@RequestBody(required = false) RequestDto requestDto) {
@@ -38,7 +38,8 @@ public class Controller {
         log.info("Post message for publishing to Kafka with text = {}", requestDto.getMessage());
         String message = requestDto.getMessage().concat(" ").concat(messageNumber.toString());
         requestDto.setMessage(message);
-        ResponseDto responseDto = kafkaSyncTemplate.kafkaExchange(requestDto);
+        ResponseDto responseDto = new ResponseDto("");
+        responseDto = kafkaSyncTemplate.kafkaExchange(requestDto, responseDto);
         return ResponseEntity.ok(responseDto);
     }
 }

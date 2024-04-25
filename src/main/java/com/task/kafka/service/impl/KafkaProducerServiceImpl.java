@@ -34,7 +34,6 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
                             result.getRecordMetadata().offset(), exchangerUuid);
                     } else {
                         log.error("Message {} with id = {} was not sent", message, exchangerUuid);
-                        System.err.println("message: " + message + " was not sent " + ex.getMessage());
                     }
                 });
         } catch (Exception ex) {

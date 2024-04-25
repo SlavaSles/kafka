@@ -2,8 +2,6 @@ package com.task.kafka.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.task.kafka.dto.RequestDto;
-import com.task.kafka.dto.ResponseDto;
 import com.task.kafka.service.KafkaProducerService;
 import com.task.kafka.service.KafkaSyncTemplate;
 import java.util.Map;
@@ -24,9 +22,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class KafkaSyncTemplateImpl implements KafkaSyncTemplate {
+public class KafkaSyncTemplateImpl<T, S> implements KafkaSyncTemplate<T, S> {
 
-    private final Map<String, Exchanger<Object>> exchangerMap = new ConcurrentHashMap<>();
+    private final Map<String, Exchanger<S>> exchangerMap = new ConcurrentHashMap<>();
 
     private final ObjectMapper objectMapper;
 
@@ -41,21 +39,25 @@ public class KafkaSyncTemplateImpl implements KafkaSyncTemplate {
     @Value("${application.kafka.exchange.timeout:5000}")
     private final Long EXCHANGE_TIMEOUT;
 
-    public ResponseDto kafkaExchange(RequestDto requestDto) {
-        Exchanger<Object> exchanger = new Exchanger<>();
+    private Class<?> clazz;
+
+    public S kafkaExchange(T t, S s) {
+        clazz = s.getClass();
+        Exchanger<S> exchanger = new Exchanger<>();
         String exchangerUuid = UUID.randomUUID().toString();
         exchangerMap.put(exchangerUuid, exchanger);
-        Object answer;
+        S answer;
         try {
-            kafkaProducerService.sendMessage(exchangerUuid, objectMapper.writeValueAsString(requestDto),
+            kafkaProducerService.sendMessage(exchangerUuid, objectMapper.writeValueAsString(t),
                 HEADER_NAME);
-            answer = exchanger.exchange(null, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
-            exchangerMap.remove(exchangerUuid);
+            answer = exchanger.exchange(s, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
             throw new RuntimeException(e);
+        } finally {
+            exchangerMap.remove(exchangerUuid);
         }
-        log.info("RestService successfully convert message to ResponseDto = {}", ((ResponseDto) answer).message());
-        return (ResponseDto) answer;
+        log.info("RestService successfully convert message to ResponseDto = {}", answer.toString());
+        return answer;
     }
 
     @KafkaListener(topics = consumerTopic, groupId = kafkaConsumerGroupId)
@@ -76,16 +78,18 @@ public class KafkaSyncTemplateImpl implements KafkaSyncTemplate {
     }
 
     private void exchangeMessage(String exchangerUuid, String message) {
-        if (exchangerMap.containsKey(exchangerUuid)) {
-            log.info("Returning response message = {}", message);
-            try {
-                RequestDto requestDto = objectMapper.readValue(message, RequestDto.class);
-                ResponseDto responseDto = new ResponseDto(requestDto.getMessage());
-                Exchanger<Object> exchanger = exchangerMap.get(exchangerUuid);
-                exchanger.exchange(responseDto, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
-                throw new RuntimeException(e);
+        if (!exchangerMap.containsKey(exchangerUuid)) {
+            return;
+        }
+        log.info("Returning response message = {}", message);
+        try {
+            S response = (S) objectMapper.readValue(message, clazz);
+            Exchanger<S> exchanger = exchangerMap.get(exchangerUuid);
+            if (exchanger != null) {
+                exchanger.exchange(response, EXCHANGE_TIMEOUT, TimeUnit.MILLISECONDS);
             }
+        } catch (InterruptedException | TimeoutException | JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 }
